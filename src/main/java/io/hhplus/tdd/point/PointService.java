@@ -16,6 +16,8 @@ public class PointService {
     }
 
     public void charge(long userId, long amount) {
+        if(amount <= 0) throw new IllegalArgumentException("충전 금액은 0보다 커야 합니다.");
+
         UserPoint current = userPointTable.selectById(userId);
         long newPoint = current.point() + amount;
 
