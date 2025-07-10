@@ -185,4 +185,31 @@ public class PointServiceTest {
         // Then
         assertEquals(700, service.getPoint(userId));
     }
+
+    @Test
+    void 잔고_부족() {
+        // Given
+        long userId = 2L;
+        UserPointTable table = new UserPointTable();
+        table.insertOrUpdate(userId, 100);
+
+        PointService service = new PointService(table);
+
+        // When Then
+        assertThrows(IllegalStateException.class, () -> service.use(userId, 500));
+    }
+
+    @Test
+    void 음수_혹은_0_포인트_사용_시_내역_저장_및_예외() {
+        // Given
+        long userId = 3L;
+        UserPointTable table = new UserPointTable();
+        table.insertOrUpdate(userId, 0);
+
+        PointService service = new PointService(table);
+
+        // When Then
+        assertThrows(IllegalArgumentException.class, () -> service.use(userId, 0));
+        assertThrows(IllegalArgumentException.class, () -> service.use(userId, -500));
+    }
 }
