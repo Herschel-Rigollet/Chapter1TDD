@@ -29,9 +29,13 @@ public class PointService {
     }
 
     public void use(long userId, long amount) {
+        if (amount <= 0) throw new IllegalArgumentException("사용 포인트는 0보다 커야 합니다.");
+
         UserPoint current = userPointTable.selectById(userId);
+        if (current.point() < amount) throw new IllegalArgumentException("잔고 부족");
 
         long newPoint = current.point() - amount;
         userPointTable.insertOrUpdate(userId, newPoint);
+        pointHistoryTable.insert(userId, amount, TransactionType.USE, System.currentTimeMillis());
     }
 }
