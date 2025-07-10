@@ -1,7 +1,10 @@
 package io.hhplus.tdd.point;
 
+import io.hhplus.tdd.database.PointHistoryTable;
 import io.hhplus.tdd.database.UserPointTable;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -62,20 +65,26 @@ public class PointServiceTest {
     }
 
     @Test
-    void 정상_충전() {
+    void 정상_충전_및_내역_저장() {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
         table.insertOrUpdate(userId, 5000);
+        PointHistoryTable historyTable = new PointHistoryTable();
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When
         service.charge(userId, 3000); // 5000 + 3000 = 8000
 
         // Then
-        long result = service.getPoint(userId);
-        assertEquals(8000, result);
+        List<PointHistory> histories = historyTable.selectAllByUserId(userId);
+        assertEquals(1, histories.size());
+
+        PointHistory history = histories.get(0);
+        assertEquals(userId, history.userId());
+        assertEquals(1000, history.amount());
+        assertEquals(TransactionType.CHARGE, history.type());
     }
 
     @Test
