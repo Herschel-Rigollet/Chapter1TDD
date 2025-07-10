@@ -169,4 +169,20 @@ public class PointServiceTest {
         // Then
         assertEquals(1600, service.getPoint(userId));
     }
+
+    @Test
+    void 포인트_사용() {
+        // Given
+        long userId = 1L;
+        UserPointTable table = new UserPointTable();
+        table.insertOrUpdate(userId, 1000);
+
+        PointService service = new PointService(table);
+
+        // When
+        service.use(userId, 300);
+
+        // Then
+        assertEquals(700, service.getPoint(userId));
+    }
 }
