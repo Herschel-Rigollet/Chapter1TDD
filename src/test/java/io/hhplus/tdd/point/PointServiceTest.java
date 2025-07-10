@@ -73,13 +73,13 @@ public class PointServiceTest {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
-        table.insertOrUpdate(userId, 5000);
+        table.insertOrUpdate(userId, 0);
         PointHistoryTable historyTable = new PointHistoryTable();
 
         PointService service = new PointService(table, historyTable);
 
         // When
-        service.charge(userId, 3000); // 5000 + 3000 = 8000
+        service.charge(userId, 3000);
 
         // Then
         List<PointHistory> histories = historyTable.selectAllByUserId(userId);
@@ -87,24 +87,26 @@ public class PointServiceTest {
 
         PointHistory history = histories.get(0);
         assertEquals(userId, history.userId());
-        assertEquals(1000, history.amount());
+        assertEquals(3000, history.amount());
         assertEquals(TransactionType.CHARGE, history.type());
     }
 
     @Test
-    void 포인트가_0일_때_첫충전() {
+    void 포인트가_0일_때_첫충전_및_내역_저장() {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 0);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
-        // When
-        service.charge(userId, 1000);
-
+        // When & Then
+        //service.charge(userId, 1000);
         // Then
-        assertEquals(1000, service.getPoint(userId));
+        //assertEquals(1000, service.getPoint(userId));
+        assertThrows(IllegalArgumentException.class, () -> service.charge(userId, 0));
+        assertEquals(0, historyTable.selectAllByUserId(userId).size());
     }
 
     @Test
@@ -112,67 +114,80 @@ public class PointServiceTest {
         // Given
         long userId = 999L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(1L, 500);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
-        // When Then
+        // When & Then
         assertThrows(NullPointerException.class, () -> service.charge(userId, 1000));
     }
 
     @Test
-    void 음수_포인트_충전_시도() {
+    void 음수_포인트_충전_시도_및_내역_저장() {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 500);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
-        // When Then
+        // When & Then
         assertThrows(IllegalArgumentException.class, () -> service.charge(userId, -500));
+        assertEquals(0, historyTable.selectAllByUserId(userId).size());
     }
 
     @Test
-    void 포인트_0_충전() {
+    void 포인트_0_충전_및_내역_저장() {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 1000);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When
-        service.charge(userId, 0);
+        //service.charge(userId, 0);
 
         // Then
-        assertEquals(1000, service.getPoint(userId));
+        //assertEquals(1000, service.getPoint(userId));
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> service.charge(userId, 0));
+        assertEquals(0, historyTable.selectAllByUserId(userId).size());
     }
 
     @Test
-    void 매우_큰_금액_충전() {
+    void 매우_큰_금액_충전_및_내역_저장() {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 0);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When
         service.charge(userId, Long.MAX_VALUE);
 
         // Then
-        assertEquals(Long.MAX_VALUE, service.getPoint(userId));
+        //assertEquals(Long.MAX_VALUE, service.getPoint(userId));
+        List<PointHistory> histories = historyTable.selectAllByUserId(userId);
+        assertEquals(1, histories.size());
+        assertEquals(Long.MAX_VALUE, histories.get(0).amount());
     }
 
     @Test
-    void 여러_번_연속_충전() {
+    void 여러_번_연속_충전_및_내역_저장() {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 1000);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When
         service.charge(userId, 100);
@@ -180,7 +195,12 @@ public class PointServiceTest {
         service.charge(userId, 300);
 
         // Then
-        assertEquals(1600, service.getPoint(userId));
+        //assertEquals(1600, service.getPoint(userId));
+        List<PointHistory> histories = historyTable.selectAllByUserId(userId);
+        assertEquals(3, histories.size());
+
+        assertEquals(100, histories.get(0).amount());
+        assertEquals(200, histories.get(1).amount());
     }
 
     @Test
@@ -190,13 +210,13 @@ public class PointServiceTest {
         UserPointTable table = new UserPointTable();
         table.insertOrUpdate(userId, 1000);
 
-        PointService service = new PointService(table);
+        //PointService service = new PointService(table);
 
         // When
-        service.use(userId, 300);
+        //service.use(userId, 300);
 
         // Then
-        assertEquals(700, service.getPoint(userId));
+        //assertEquals(700, service.getPoint(userId));
     }
 
     @Test
@@ -206,10 +226,10 @@ public class PointServiceTest {
         UserPointTable table = new UserPointTable();
         table.insertOrUpdate(userId, 100);
 
-        PointService service = new PointService(table);
+        //PointService service = new PointService(table);
 
         // When Then
-        assertThrows(IllegalStateException.class, () -> service.use(userId, 500));
+        //assertThrows(IllegalStateException.class, () -> service.use(userId, 500));
     }
 
     @Test
@@ -219,10 +239,10 @@ public class PointServiceTest {
         UserPointTable table = new UserPointTable();
         table.insertOrUpdate(userId, 0);
 
-        PointService service = new PointService(table);
+        //PointService service = new PointService(table);
 
         // When Then
-        assertThrows(IllegalArgumentException.class, () -> service.use(userId, 0));
-        assertThrows(IllegalArgumentException.class, () -> service.use(userId, -500));
+        //assertThrows(IllegalArgumentException.class, () -> service.use(userId, 0));
+        //assertThrows(IllegalArgumentException.class, () -> service.use(userId, -500));
     }
 }

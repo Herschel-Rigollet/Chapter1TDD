@@ -25,6 +25,7 @@ public class PointService {
         long newPoint = current.point() + amount;
 
         userPointTable.insertOrUpdate(userId, newPoint);
+        pointHistoryTable.insert(userId, amount, TransactionType.CHARGE, System.currentTimeMillis());
     }
 
     public void use(long userId, long amount) {
