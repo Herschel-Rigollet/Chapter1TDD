@@ -23,4 +23,11 @@ public class PointService {
 
         userPointTable.insertOrUpdate(userId, newPoint);
     }
+
+    public void use(long userId, long amount) {
+        UserPoint current = userPointTable.selectById(userId);
+
+        long newPoint = current.point() - amount;
+        userPointTable.insertOrUpdate(userId, newPoint);
+    }
 }
