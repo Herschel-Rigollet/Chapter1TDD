@@ -14,9 +14,10 @@ public class PointServiceTest {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 1000);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When
         long result = service.getPoint(userId);
@@ -30,9 +31,10 @@ public class PointServiceTest {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 1000);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When Then
         assertThrows(NullPointerException.class, () -> service.getPoint(999L));
@@ -43,9 +45,10 @@ public class PointServiceTest {
         // Given
         long userId = 2L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 0);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When Then
         assertEquals(0, service.getPoint(2L));
@@ -56,9 +59,10 @@ public class PointServiceTest {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 1000);
 
-        PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When Then
         assertThrows(IllegalArgumentException.class, () -> service.getPoint(-1L));
