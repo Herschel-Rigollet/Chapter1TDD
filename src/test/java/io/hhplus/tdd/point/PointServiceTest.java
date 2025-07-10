@@ -204,32 +204,42 @@ public class PointServiceTest {
     }
 
     @Test
-    void 포인트_사용() {
+    void 포인트_사용_및_내역_저장() {
         // Given
         long userId = 1L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 1000);
 
-        //PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
         // When
-        //service.use(userId, 300);
+        service.use(userId, 300);
 
         // Then
         //assertEquals(700, service.getPoint(userId));
+        List<PointHistory> histories = historyTable.selectAllByUserId(userId);
+        assertEquals(1, histories.size());
+
+        PointHistory entry = histories.get(0);
+        assertEquals(userId, entry.userId());
+        assertEquals(300, entry.amount());
+        assertEquals(TransactionType.USE, entry.type());
     }
 
     @Test
-    void 잔고_부족() {
+    void 잔고_부족_및_내역_저장() {
         // Given
         long userId = 2L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 100);
 
-        //PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
-        // When Then
-        //assertThrows(IllegalStateException.class, () -> service.use(userId, 500));
+        // When & Then
+        assertThrows(IllegalStateException.class, () -> service.use(userId, 500));
+        assertEquals(0, historyTable.selectAllByUserId(userId).size());
     }
 
     @Test
@@ -237,12 +247,15 @@ public class PointServiceTest {
         // Given
         long userId = 3L;
         UserPointTable table = new UserPointTable();
+        PointHistoryTable historyTable = new PointHistoryTable();
         table.insertOrUpdate(userId, 0);
 
-        //PointService service = new PointService(table);
+        PointService service = new PointService(table, historyTable);
 
-        // When Then
-        //assertThrows(IllegalArgumentException.class, () -> service.use(userId, 0));
-        //assertThrows(IllegalArgumentException.class, () -> service.use(userId, -500));
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> service.use(userId, 0));
+        assertThrows(IllegalArgumentException.class, () -> service.use(userId, -500));
+        assertEquals(0, historyTable.selectAllByUserId(userId).size());
+        assertEquals(0, historyTable.selectAllByUserId(userId).size());
     }
 }
